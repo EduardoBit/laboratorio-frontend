@@ -1,0 +1,78 @@
+<div class="login-page">
+
+  <!-- Card central -->
+  <div class="login-card">
+
+    <!-- Encabezado -->
+    <div class="login-header">
+      <div class="login-logo">
+        <i class="pi pi-flask text-5xl text-blue-600"></i>
+      </div>
+      <h1 class="login-title">Laboratorio</h1>
+      <p class="login-subtitle">Fórmulas Magistrales</p>
+    </div>
+
+    <!-- Formulario -->
+    <form [formGroup]="form" (ngSubmit)="submit()" novalidate class="login-form">
+
+      <!-- Usuario -->
+      <div class="field">
+        <label for="username" class="field-label">Usuario</label>
+        <input
+          pInputText
+          id="username"
+          formControlName="username"
+          placeholder="Ingresa tu usuario"
+          autocomplete="username"
+          class="w-full"
+          [class.ng-invalid]="username.invalid && username.touched"
+          [class.ng-dirty]="username.touched"
+        />
+        @if (username.invalid && username.touched) {
+          <small class="field-error">El usuario es requerido.</small>
+        }
+      </div>
+
+      <!-- Contraseña -->
+      <div class="field">
+        <label for="password" class="field-label">Contraseña</label>
+        <p-password
+          inputId="password"
+          formControlName="password"
+          placeholder="Ingresa tu contraseña"
+          [feedback]="false"
+          [toggleMask]="true"
+          autocomplete="current-password"
+          styleClass="w-full"
+          inputStyleClass="w-full"
+          [class.ng-invalid]="password.invalid && password.touched"
+        />
+        @if (password.invalid && password.touched) {
+          <small class="field-error">La contraseña es requerida.</small>
+        }
+      </div>
+
+      <!-- Error global (401 / 500) -->
+      @if (errorMessage()) {
+        <div class="error-banner">
+          <i class="pi pi-exclamation-circle"></i>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <!-- Botón submit -->
+      <p-button
+        type="submit"
+        label="Ingresar"
+        icon="pi pi-sign-in"
+        iconPos="right"
+        styleClass="w-full login-btn"
+        [loading]="loading()"
+        [disabled]="form.invalid || loading()"
+      />
+
+    </form>
+
+  </div>
+
+</div>
