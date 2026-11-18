@@ -1,0 +1,172 @@
+<div class="page-container max-w-4xl mx-auto">
+  <div class="page-header flex justify-between items-center mb-6">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-800">Corregir Receta Magistral #{{ recetaId }}</h1>
+      <p class="text-orange-600 text-sm font-semibold">
+        <i class="pi pi-exclamation-triangle mr-1"></i>
+        Esta receta fue observada y requiere corrección de las fórmulas.
+      </p>
+    </div>
+    <p-button 
+      label="Volver al detalle" 
+      icon="pi pi-arrow-left" 
+      styleClass="p-button-text p-button-secondary" 
+      [routerLink]="['/recetas', recetaId]"
+    ></p-button>
+  </div>
+
+  <!-- Loading State -->
+  @if (loadingInit()) {
+    <div class="text-center py-12 text-gray-400">
+      <i class="pi pi-spin pi-spinner text-3xl"></i>
+      <p class="mt-3">Cargando receta...</p>
+    </div>
+  } @else if (recetaOriginal(); as receta) {
+
+    <!-- Error global (HTTP 422, validación, etc.) -->
+    @if (errorMessage()) {
+      <div class="p-4 mb-6 bg-red-50 border border-red-200 rounded-lg flex items-start gap-3 text-red-700 text-sm">
+        <i class="pi pi-exclamation-triangle mt-0.5"></i>
+        <div>
+          <p class="font-bold">Error al guardar las correcciones</p>
+          <p>{{ errorMessage() }}</p>
+        </div>
+      </div>
+    }
+
+    <!-- Panel de Observación (Solo Lectura) -->
+    @if (receta.observacion) {
+      <div class="mb-6 p-4 bg-orange-50 border border-orange-200 rounded-lg flex items-start gap-3">
+        <i class="pi pi-comment text-orange-600 mt-1"></i>
+        <div>
+          <p class="text-xs font-bold text-orange-800 uppercase tracking-wider mb-1">Motivo de la observación</p>
+          <p class="text-orange-900">{{ receta.observacion }}</p>
+        </div>
+      </div>
+    }
+
+    <form [formGroup]="form" (ngSubmit)="submit()" class="flex flex-col gap-6">
+
+      <!-- ========================================== -->
+      <!-- DATOS INFORMATIVOS (SOLO LECTURA)          -->
+      <!-- ========================================== -->
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm flex flex-col md:flex-row gap-6">
+        <div class="flex-1">
+          <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <i class="pi pi-user text-blue-500"></i> Paciente
+          </h2>
+          <p class="font-semibold text-gray-800">{{ receta.pacienteNombreCompleto || 'Paciente ID: ' + receta.pacienteId }}</p>
+          <p class="text-xs text-gray-500">No editable en corrección</p>
+        </div>
+        
+        <div class="hidden md:block w-px bg-gray-100"></div>
+
+        <div class="flex-1">
+          <h2 class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 flex items-center gap-2">
+            <i class="pi pi-user-plus text-indigo-500"></i> Médico Prescriptor
+          </h2>
+          <p class="font-semibold text-gray-800">{{ receta.medicoNombreCompleto || 'Médico ID: ' + receta.medicoId }}</p>
+          <p class="text-xs text-gray-500">No editable en corrección</p>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- DETALLES DE LA PRESCRIPCIÓN (EDITABLES)    -->
+      <!-- ========================================== -->
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <h2 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <i class="pi pi-pencil text-purple-500"></i> Fórmulas a Corregir
+        </h2>
+
+        <div class="flex flex-col gap-4" formArrayName="detalles">
+          @for (detalle of detalles.controls; track $index; let i = $index) {
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg" [formGroupName]="i">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-gray-500 uppercase">Detalle #{{ i + 1 }}</span>
+                @if (detalles.length > 1) {
+                  <p-button 
+                    type="button"
+                    icon="pi pi-trash" 
+                    styleClass="p-button-text p-button-danger p-button-sm"
+                    (onClick)="removerDetalle(i)"
+                  ></p-button>
+                }
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <!-- Descripción -->
+                <div class="md:col-span-6 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-500">Fórmula / Descripción Prescrita</label>
+                  <input 
+                    pInputText 
+                    formControlName="descripcionPrescrita" 
+                    maxlength="300"
+                    placeholder="Ej: Crema hidratante con urea 10%..."
+                    class="w-full"
+                  />
+                </div>
+
+                <!-- Cantidad -->
+                <div class="md:col-span-3 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-500">Cantidad</label>
+                  <input 
+                    pInputText
+                    type="number"
+                    formControlName="cantidadSolicitada"
+                    min="0.0001"
+                    step="0.0001"
+                    placeholder="Ej: 100"
+                    class="w-full"
+                  />
+                </div>
+
+                <!-- Unidad de Medida -->
+                <div class="md:col-span-3 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-500">Unidad</label>
+                  <p-select 
+                    formControlName="unidadMedidaId" 
+                    [options]="unidadesMedida()" 
+                    optionLabel="nombre"
+                    optionValue="id"
+                    placeholder="Seleccionar"
+                    styleClass="w-full"
+                  ></p-select>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+
+        <div class="mt-4">
+          <p-button 
+            type="button"
+            label="Agregar otra fórmula" 
+            icon="pi pi-plus" 
+            styleClass="p-button-text p-button-secondary"
+            (onClick)="agregarDetalle()"
+          ></p-button>
+        </div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- PIE: Acciones                              -->
+      <!-- ========================================== -->
+      <div class="flex justify-end gap-3 pb-8">
+        <p-button 
+          type="button" 
+          label="Cancelar" 
+          styleClass="p-button-text p-button-secondary" 
+          [routerLink]="['/recetas', recetaId]"
+        ></p-button>
+        <p-button 
+          type="submit" 
+          label="Guardar Corrección" 
+          icon="pi pi-check"
+          [loading]="loadingSubmit()"
+        ></p-button>
+      </div>
+
+    </form>
+
+  }
+</div>

@@ -1,0 +1,234 @@
+<div class="p-6 max-w-5xl mx-auto space-y-6">
+  
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900">Nueva Receta Magistral</h1>
+      <p class="text-gray-500 text-sm">Complete los datos del paciente, prescriptor y detalle de la fórmula</p>
+    </div>
+  
+    <form [formGroup]="form" class="space-y-6">
+      
+      <!-- ========================================== -->
+      <!-- SECCIÓN 1: PACIENTE                        -->
+      <!-- ========================================== -->
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <h2 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <i class="pi pi-user text-primary-500"></i> Paciente
+        </h2>
+  
+        <div class="max-w-md">
+          <label class="text-xs font-semibold text-gray-500 mb-1 block">DNI del Paciente</label>
+          <div class="flex gap-2">
+            <!-- Search input -->
+            <input 
+              pInputText 
+              [ngModel]="dniBusqueda()"
+              (ngModelChange)="onDniChange($event)"
+              [ngModelOptions]="{standalone: true}"
+              type="text" 
+              maxlength="8" 
+              placeholder="Ej: 12345678"
+              class="w-full"
+              (keydown.enter)="buscarPaciente(); $event.preventDefault();"
+            />
+            <p-button 
+              icon="pi pi-search" 
+              [loading]="buscandoPaciente()" 
+              (onClick)="buscarPaciente()"
+            ></p-button>
+          </div>
+  
+          @if (pacienteEncontrado()) {
+            <div class="mt-4 p-4 bg-emerald-50 border border-emerald-100 rounded-lg flex items-start gap-3">
+              <i class="pi pi-check-circle text-emerald-500 mt-0.5"></i>
+              <div>
+                <p class="font-bold text-emerald-900">{{ pacienteEncontrado()?.nombres }} {{ pacienteEncontrado()?.apellidos }}</p>
+                <p class="text-xs text-emerald-700">Paciente seleccionado correctamente.</p>
+              </div>
+              <p-button 
+                icon="pi pi-times" 
+                [text]="true" 
+                severity="danger" 
+                styleClass="ml-auto" 
+                (onClick)="limpiarPaciente()">
+              </p-button>
+            </div>
+          } @else if (pacienteBuscado()) {
+            <div class="mt-4 p-4 bg-amber-50 border border-amber-100 rounded-lg flex flex-col items-start gap-2">
+              <div class="flex gap-2">
+                <i class="pi pi-info-circle text-amber-500 mt-0.5"></i>
+                <div>
+                  <p class="font-bold text-amber-900">Paciente no encontrado</p>
+                  <p class="text-xs text-amber-700">Debe registrarlo antes de continuar.</p>
+                </div>
+              </div>
+              <p-button 
+                label="Registrar Nuevo Paciente" 
+                icon="pi pi-user-plus" 
+                size="small" 
+                severity="warn"
+                [routerLink]="['/pacientes/nuevo']"
+                [queryParams]="{ dni: dniBusqueda() }">
+              </p-button>
+            </div>
+          }
+        </div>
+      </div>
+  
+      <!-- ========================================== -->
+      <!-- SECCIÓN 2: MÃƒâ€°DICO PRESCRIPTOR              -->
+      <!-- ========================================== -->
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <h2 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <i class="pi pi-user-plus text-indigo-500"></i> Médico Prescriptor
+        </h2>
+  
+        <div class="max-w-lg">
+          <label class="text-xs font-semibold text-gray-500 mb-1 block">Seleccionar Médico (solo activos)</label>
+          <p-select 
+            formControlName="medicoId" 
+            [options]="medicosActivos()" 
+            optionLabel="apellidos" 
+            optionValue="id" 
+            [filter]="true" 
+            filterBy="nombres,apellidos,cmp" 
+            [showClear]="true" 
+            placeholder="Buscar por nombre o CMP..." 
+            styleClass="w-full">
+            <ng-template pTemplate="selectedItem" let-medico>
+              <div class="flex items-center gap-2" *ngIf="medico">
+                <span class="font-bold text-gray-500 text-xs">CMP {{ medico.cmp }}</span>
+                <span>{{ medico.nombres }} {{ medico.apellidos }}</span>
+              </div>
+            </ng-template>
+            <ng-template pTemplate="item" let-medico>
+              <div class="flex flex-col">
+                <span class="font-semibold">{{ medico.nombres }} {{ medico.apellidos }}</span>
+                <span class="text-xs text-gray-500">CMP: {{ medico.cmp }} | Especialidad: {{ medico.especialidad }}</span>
+              </div>
+            </ng-template>
+          </p-select>
+          @if (medicosActivos().length === 0) {
+            <p class="text-xs text-amber-600 mt-2">
+              No hay médicos activos registrados. Registre uno en Médicos para poder guardar la receta.
+            </p>
+          }
+        </div>
+      </div>
+  
+      <!-- ========================================== -->
+      <!-- SECCIÓN 3: DETALLES DE LA PRESCRIPCIÃƒâ€œN     -->
+      <!-- ========================================== -->
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <h2 class="text-sm font-bold text-gray-600 uppercase tracking-wider mb-4 flex items-center gap-2">
+          <i class="pi pi-list text-purple-500"></i> Líneas de Prescripción
+        </h2>
+  
+        <div class="flex flex-col gap-4" formArrayName="detalles">
+          @for (detalle of detalles.controls; track $index; let i = $index) {
+            <div class="p-4 bg-gray-50 border border-gray-200 rounded-lg" [formGroupName]="i">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-xs font-bold text-gray-400 uppercase tracking-wider">Detalle #{{ i + 1 }}</span>
+                @if (detalles.length > 1) {
+                  <p-button 
+                    icon="pi pi-trash" 
+                    severity="danger" 
+                    [text]="true" 
+                    (onClick)="removerDetalle(i)">
+                  </p-button>
+                }
+              </div>
+  
+              <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
+                <!-- Descripción -->
+                <div class="md:col-span-6 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-500">Fórmula / Descripción Prescrita</label>
+                  <input 
+                    pInputText 
+                    formControlName="descripcionPrescrita" 
+                    type="text" 
+                    maxlength="300"
+                    placeholder="Ej. Minoxidil 5% en loción capilar"
+                  />
+                </div>
+  
+                <!-- Cantidad -->
+                <div class="md:col-span-3 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-500">Cantidad</label>
+                  <input 
+                    pInputText 
+                    type="number" 
+                    formControlName="cantidadSolicitada" 
+                    min="1" 
+                    max="999"
+                    class="w-full"
+                  />
+                </div>
+  
+                <!-- Unidad de Medida (desde backend) -->
+                <div class="md:col-span-3 flex flex-col gap-1">
+                  <label class="text-xs font-semibold text-gray-500">Unidad</label>
+                  <p-select 
+                    formControlName="unidadMedidaId" 
+                    [options]="unidadesMedida()" 
+                    optionLabel="nombre"
+                    optionValue="id"
+                    placeholder="Seleccionar"
+                    styleClass="w-full"
+                  ></p-select>
+                </div>
+              </div>
+            </div>
+          }
+        </div>
+  
+        <!-- BotÃƒÂ³n de agregar otra lÃƒÂ­nea -->
+        <div class="mt-4">
+          <p-button 
+            type="button"
+            label="Agregar otra fórmula" 
+            icon="pi pi-plus" 
+            styleClass="p-button-text p-button-secondary"
+            (onClick)="agregarDetalle()"
+          ></p-button>
+        </div>
+      </div>      <!-- ACCIONES DEL FORMULARIO -->
+      <div class="flex flex-col sm:flex-row justify-between items-center pt-6 border-t border-gray-200 mt-8 gap-4">
+        <div>
+          @if (errorMessage()) {
+            <span class="text-red-500 font-bold text-sm flex items-center gap-2">
+              <i class="pi pi-times-circle"></i>
+              {{ errorMessage() }}
+            </span>
+          }
+        </div>
+        <div class="flex gap-3">
+          <div class="flex flex-col items-end gap-1">
+            @if (!puedeGuardar()) {
+              <span class="text-xs text-gray-500">
+                @if (!pacienteEncontrado()) {
+                  Busque y seleccione un paciente activo por DNI.
+                } @else {
+                  Complete los campos obligatorios de prescripción.
+                }
+              </span>
+            }
+            <div class="flex gap-3">
+              <p-button 
+                label="Cancelar" 
+                severity="secondary" 
+                [text]="true" 
+                routerLink="/recetas">
+              </p-button>
+              <p-button 
+                label="Guardar Receta" 
+                icon="pi pi-save" 
+                (onClick)="submit()"
+                [loading]="loading()"
+                [disabled]="!puedeGuardar()">
+              </p-button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </form>
+  </div>

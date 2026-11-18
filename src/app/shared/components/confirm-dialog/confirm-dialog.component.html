@@ -1,0 +1,37 @@
+<p-dialog [(visible)]="visible" [modal]="true" [closable]="false" [showHeader]="false" [style]="{width: '400px'}">
+  <div class="flex flex-col items-center pt-6 pb-4 px-4 text-center">
+    
+    @if (severity() === 'success') {
+      <div class="w-16 h-16 rounded-full bg-green-100 text-green-500 flex items-center justify-center text-3xl mb-4">
+        <i class="pi pi-check-circle"></i>
+      </div>
+    } @else if (severity() === 'warning') {
+      <div class="w-16 h-16 rounded-full bg-amber-100 text-amber-500 flex items-center justify-center text-3xl mb-4">
+        <i class="pi pi-exclamation-triangle"></i>
+      </div>
+    } @else if (severity() === 'danger') {
+      <div class="w-16 h-16 rounded-full bg-red-100 text-red-500 flex items-center justify-center text-3xl mb-4">
+        <i class="pi pi-exclamation-circle"></i>
+      </div>
+    }
+
+    <h2 class="text-xl font-bold text-gray-800 mb-2">{{ title() }}</h2>
+    <p class="text-gray-600 mb-6">{{ message() }}</p>
+
+    <div class="flex w-full gap-3">
+      <p-button 
+        [label]="cancelLabel()" 
+        styleClass="p-button-secondary p-button-outlined w-full" 
+        (onClick)="handleCancel()"
+        [disabled]="loading()">
+      </p-button>
+      
+      <p-button 
+        [label]="confirmLabel()" 
+        [styleClass]="severity() === 'danger' ? 'p-button-danger w-full' : (severity() === 'success' ? 'p-button-success w-full' : 'p-button-warning w-full')" 
+        (onClick)="handleConfirm()"
+        [loading]="loading()">
+      </p-button>
+    </div>
+  </div>
+</p-dialog>

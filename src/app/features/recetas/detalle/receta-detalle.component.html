@@ -1,0 +1,434 @@
+@if (loading()) {
+  <app-loading-state message="Cargando detalles de la receta..." />
+} @else if (receta()) {
+  <div class="p-6 max-w-5xl mx-auto space-y 6">
+    
+    <!-- Botón Volver -->
+    <div class="mb-4">
+      <p-button 
+        icon="pi pi-arrow-left" 
+        label="Volver a la lista" 
+        [text]="true" 
+        severity="secondary" 
+        routerLink="/recetas" 
+        styleClass="p-0 text-gray-600 hover:text-gray-900">
+      </p-button>
+    </div>
+
+    <!-- Encabezado y Acciones -->
+    <app-page-header title="Receta #{{ receta()!.id }}" subtitle="Registrada el {{ receta()!.fecha | date:'dd/MM/yyyy HH:mm' }} • Libro Recetario N° {{ receta()!.libroRecetarioNumero }}">
+      <app-status-badge [status]="receta()!.estado" />
+    </app-page-header>
+
+    <!-- Mensaje si está VALIDADA -->
+    @if (receta()!.estado === 'VALIDADA') {
+      <div class="bg-emerald-50 border-l-4 border-emerald-500 p-4 rounded-md">
+        <div class="flex">
+          <i class="pi pi-check-circle text-emerald-500 mt-0.5 mr-3"></i>
+          <div>
+            <h3 class="text-emerald-800 font-bold text-sm">Receta Validada</h3>
+            <p class="text-emerald-700 text-xs mt-0.5">
+              @if (esVendedor()) {
+                Lista para cotizar y procesar la venta.
+              } @else {
+                Esta receta está validada y lista para formular.
+              }
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Alerta si está OBSERVADA -->
+    @if (receta()!.estado === 'OBSERVADA') {
+      <div class="bg-amber-50 border-l-4 border-amber-500 p-4 rounded-md">
+        <div class="flex">
+          <i class="pi pi-exclamation-triangle text-amber-500 mt-0.5 mr-3"></i>
+          <div>
+            <h3 class="text-amber-800 font-bold text-sm">Receta Observada por el Químico Farmacéutico</h3>
+            <p class="text-amber-900 text-sm mt-1 font-medium bg-amber-100/50 p-2 rounded">
+              {{ receta()!.observacion }}
+            </p>
+          </div>
+        </div>
+      </div>
+    }
+
+    <!-- Ficha Operativa -->
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+      <div class="p-5 border-b border-gray-100 bg-gray-50/50">
+        <h2 class="text-lg font-bold text-gray-700">Ficha Operativa</h2>
+      </div>
+      
+      <div class="p-5">
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">PARTICIPANTES</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <!-- Paciente -->
+          <div class="flex items-center gap-3 bg-gray-50/50 p-4 rounded-lg">
+            <div class="h-10 w-10 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center font-bold">
+              <i class="pi pi-user"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Paciente</p>
+              <p class="font-bold text-gray-900">{{ receta()!.pacienteNombreCompleto || ('ID: ' + receta()!.pacienteId) }}</p>
+            </div>
+          </div>
+          
+          <!-- Médico -->
+          <div class="flex items-center gap-3 bg-gray-50/50 p-4 rounded-lg">
+            <div class="h-10 w-10 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold">
+              <i class="pi pi-briefcase"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Médico Prescriptor</p>
+              <p class="font-bold text-gray-900">{{ receta()!.medicoNombreCompleto || ('ID: ' + receta()!.medicoId) }}</p>
+            </div>
+          </div>
+
+          <!-- Usuario Creador -->
+          <div class="flex items-center gap-3 bg-gray-50/50 p-4 rounded-lg">
+            <div class="h-10 w-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold">
+              <i class="pi pi-user-edit"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Usuario Creador</p>
+              <p class="font-bold text-gray-900">{{ receta()!.usuarioCreadorNombre || ('ID: ' + receta()!.usuarioCreadorId) }}</p>
+            </div>
+          </div>
+
+          <!-- Usuario Validador -->
+          <div class="flex items-center gap-3 bg-gray-50/50 p-4 rounded-lg">
+            <div class="h-10 w-10 rounded-full bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
+              <i class="pi pi-user-check"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Usuario Validador</p>
+              <p class="font-bold text-gray-900">{{ receta()!.usuarioValidadorNombre ?? receta()!.usuarioValidadorId ?? '-' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">Trazabilidad</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div class="flex items-center gap-3 bg-gray-50/50 p-4 rounded-lg">
+            <div class="h-10 w-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold">
+              <i class="pi pi-clock"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Fecha Creación</p>
+              <p class="font-bold text-gray-900">{{ receta()!.createdAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 bg-gray-50/50 p-4 rounded-lg">
+            <div class="h-10 w-10 rounded-full bg-gray-100 text-gray-600 flex items-center justify-center font-bold">
+              <i class="pi pi-refresh"></i>
+            </div>
+            <div>
+              <p class="text-xs text-gray-500 mb-1">Fecha Actualización</p>
+              <p class="font-bold text-gray-900">{{ receta()!.updatedAt === receta()!.createdAt ? 'Sin modificaciones' : receta()!.updatedAt | date:'dd/MM/yyyy HH:mm' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <h3 class="text-xs font-bold text-gray-400 uppercase tracking-wider mb-4">PRESCRIPCIÓN</h3>
+        <div class="overflow-x-auto border border-gray-100 rounded-lg">
+          <table class="w-full text-left border-collapse">
+              <thead class="bg-gray-50/80 border-b border-gray-200">
+            <tr>
+                <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase w-16">#</th>
+                <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Descripción / Fórmula solicitada</th>
+                <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right w-32">Cantidad</th>
+                <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase w-64">Fórmula técnica</th>
+                <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-right w-32">Acciones</th>
+              </tr>
+              </thead>
+              <tbody class="divide-y divide-gray-100">
+                @for (detalle of receta()!.detalles; track detalle.id; let i = $index) {
+                <tr class="hover:bg-gray-50/50 transition-colors">
+                  <td class="px-6 py-4 text-sm text-gray-500 font-md">{{ i + 1 }}</td>
+                  <td class="px-6 py-4 font-semibold text-gray-800">{{ detalle.descripcionPrescrita }}</td>
+                  <td class="px-6 py-4 text-right">
+                    <span class="font-bold text-gray-900">{{ detalle.cantidadSolicitada }}</span>
+                    <span class="text-xs text-gray-500 ml-1">{{ detalle.unidadMedidaNombre || 'unidad(es)' }}</span>
+                  </td>
+                  <td class="px-6 py-4">
+                    @if (tecnicaDe(detalle.id); as tecnica) {
+                      <div class="text-xs font-bold text-emerald-700">{{ tecnica.tipo }}</div>
+                      <div class="text-xs text-gray-700">{{ tecnica.formulaNombre }} · v{{ tecnica.numeroVersion }}</div>
+                      @if (tecnica.justificacion) {
+                        <div class="text-[11px] text-gray-500 italic">{{ tecnica.justificacion }}</div>
+                      }
+                    } @else if (canAssociateFormula()) {
+                      <p-button
+                        label="Asociar fórmula"
+                        icon="pi pi-link"
+                        styleClass="p-button-text p-button-sm"
+                        (onClick)="abrirFormula(detalle)">
+                      </p-button>
+                    } @else {
+                      <span class="text-xs text-gray-400">Sin fórmula</span>
+                    }
+                  </td>
+                  <td class="px-6 py-4 text-right">
+                    @if (canCotizar() && tecnicaDe(detalle.id)) {
+                      <p-button
+                        label="Cotizar"
+                        icon="pi pi-dollar"
+                        styleClass="p-button-text p-button-sm"
+                        (onClick)="abrirCotizar(detalle)">
+                      </p-button>
+                    } @else {
+                      <span class="text-xs text-gray-300">—</span>
+                    }
+                  </td>
+                </tr>
+                }
+              </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Acciones Finales Inferiores -->
+    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200">
+      
+      <!-- Farmacéutico: Validar u Observar -->
+      @if (canValidate()) {
+        <p-button 
+          label="Observar" 
+          icon="pi pi-exclamation-triangle" 
+          severity="warn" 
+          [outlined]="true"
+          (onClick)="abrirObservarDialog()">
+        </p-button>
+
+        <p-button 
+          label="Validar Receta" 
+          icon="pi pi-check" 
+          severity="success" 
+          [loading]="isSubmitting()"
+          (onClick)="abrirValidarDialog()">
+        </p-button>
+      }
+
+      <!-- Autor/Vendedor: Corregir -->
+      @if (canCorrect()) {
+        <p-button 
+          label="Corregir Receta" 
+          icon="pi pi-pencil" 
+          severity="info" 
+          [routerLink]="['/recetas', receta()!.id, 'corregir']">
+        </p-button>
+      }
+
+    </div>
+
+  </div>
+}
+
+<!-- Dialog para Observación -->
+<p-dialog 
+  [(visible)]="showObservarDialog" 
+  [modal]="true" 
+  header="Observar Receta" 
+  [style]="{width: '450px'}" 
+  [draggable]="false" 
+  [resizable]="false">
+  
+  <div class="pt-4" [formGroup]="observarForm">
+    <p class="text-sm text-gray-600 mb-4">
+      Indique el motivo por el cual esta receta no puede ser validada. El vendedor deberá corregirla.
+    </p>
+    
+    <div class="flex flex-col gap-2">
+      <label class="text-xs font-bold text-gray-700">Observación</label>
+      <textarea 
+        pTextarea 
+        formControlName="observacion" 
+        rows="4" 
+        class="w-full !border-gray-300"
+        placeholder="Ej. Faltan datos en la dosis del componente X...">
+      </textarea>
+      
+      @if (observarForm.get('observacion')?.touched && observarForm.get('observacion')?.hasError('required')) {
+        <small class="text-red-500 font-bold">La observación es obligatoria.</small>
+      }
+      @if (observarForm.get('observacion')?.touched && observarForm.get('observacion')?.hasError('minlength')) {
+        <small class="text-red-500 font-bold">Detalle un poco más la observación (min 5 caracteres).</small>
+      }
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Dialog para asociar Fórmula Técnica -->
+<p-dialog
+  [(visible)]="showFormulaDialog"
+  [modal]="true"
+  header="Asociar Fórmula Técnica"
+  [style]="{width: '640px'}"
+  [draggable]="false"
+  [resizable]="false"
+  (onHide)="cerrarFormulaDialog()">
+
+  <div class="pt-2" [formGroup]="tecnicaForm">
+    @if (detalleSeleccionado()) {
+      <p class="text-sm text-gray-600 mb-4">
+        Línea prescrita: <span class="font-semibold text-gray-800">{{ detalleSeleccionado()!.descripcionPrescrita }}</span>
+        <span class="text-xs text-gray-500 ml-1">({{ detalleSeleccionado()!.cantidadSolicitada }} {{ detalleSeleccionado()!.unidadMedidaNombre }})</span>
+      </p>
+    }
+
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold text-gray-700">Fórmula Maestra</label>
+        <select formControlName="formulaMaestraId" (change)="onFormulaMaestraChange()" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+          <option [ngValue]="null">Seleccione...</option>
+          @for (f of formulasMaestras(); track f.id) {
+            <option [ngValue]="f.id">{{ f.nombre }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold text-gray-700">Versión</label>
+        <select formControlName="formulaVersionId" (change)="onVersionChange()" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+          <option [ngValue]="null">Seleccione...</option>
+          @for (v of versionesFormula(); track v.id) {
+            <option [ngValue]="v.id">v{{ v.numeroVersion }} · base {{ v.cantidadBase }} {{ v.unidadMedidaNombre }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-bold text-gray-700">Tipo</label>
+        <select formControlName="tipo" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm">
+          <option value="DIRECTA">DIRECTA (copia la versión)</option>
+          <option value="ADAPTADA">ADAPTADA (ajusta cantidades)</option>
+        </select>
+      </div>
+    </div>
+
+    @if (esAdaptada()) {
+      <div class="mt-4 flex flex-col gap-1">
+        <label class="text-xs font-bold text-gray-700">Justificación técnica *</label>
+        <textarea formControlName="justificacion" rows="2" class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm"
+          placeholder="Ej. Se ajusta el excipiente por indicación del prescriptor (RN-FOR-003)."></textarea>
+      </div>
+
+      <div class="mt-4">
+        <p class="text-xs font-bold text-gray-700 mb-2">Componentes de la versión (editables)</p>
+        @if (componentesAdaptados().length === 0) {
+          <p class="text-xs text-gray-500">Seleccione una fórmula y versión para cargar sus componentes.</p>
+        } @else {
+          <div class="overflow-x-auto border border-gray-200 rounded-lg">
+            <table class="w-full text-sm">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-3 py-2 text-xs font-bold text-gray-500 uppercase text-left">Insumo</th>
+                  <th class="px-3 py-2 text-xs font-bold text-gray-500 uppercase text-right">Cantidad</th>
+                  <th class="px-3 py-2 text-xs font-bold text-gray-500 uppercase text-left">Unidad</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (comp of componentesAdaptados(); track comp.insumoId) {
+                  <tr class="border-t border-gray-100">
+                    <td class="px-3 py-2">{{ comp.insumoNombre }}</td>
+                    <td class="px-3 py-2 text-right">
+                      <input type="number" step="0.0001" min="0.0001"
+                        [value]="comp.cantidadTeorica"
+                        (input)="setCantidadAdaptada(comp.insumoId, $event)"
+                        class="w-28 border border-gray-300 rounded-md px-2 py-1 text-sm text-right" />
+                    </td>
+                    <td class="px-3 py-2">{{ comp.unidadMedidaNombre }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+    }
+
+    <div class="flex justify-end gap-2 pt-5 mt-4 border-t border-gray-200">
+      <p-button label="Cancelar" styleClass="p-button-text p-button-secondary" (onClick)="cerrarFormulaDialog()" [disabled]="guardandoTecnica()"></p-button>
+      <p-button label="Asociar" icon="pi pi-check" (onClick)="guardarTecnica()" [loading]="guardandoTecnica()"></p-button>
+    </div>
+  </div>
+</p-dialog>
+
+<!-- Dialog para generar Cotización -->
+<p-dialog
+  [(visible)]="showCotizarDialog"
+  [modal]="true"
+  [style]="{ width: '480px' }"
+  header="Generar Cotización"
+  [draggable]="false">
+  @if (detalleCotizar(); as detalle) {
+    <div class="space-y-4">
+      <p class="text-sm text-gray-600">
+        Línea prescrita: <span class="font-semibold text-gray-800">{{ detalle.descripcionPrescrita }}</span>
+      </p>
+
+      @if (tecnicaDe(detalle.id); as tecnica) {
+        <div class="bg-emerald-50 border border-emerald-200 rounded-lg p-3">
+          <p class="text-xs font-bold text-emerald-800 uppercase tracking-wide">
+            Fórmula técnica: {{ tecnica.formulaNombre }} · v{{ tecnica.numeroVersion }} ({{ tecnica.tipo }})
+          </p>
+          @if (tecnica.componentes?.length) {
+            <ul class="mt-2 space-y-1">
+              @for (c of tecnica.componentes; track c.insumoId) {
+                <li class="text-xs text-gray-700 flex justify-between gap-3">
+                  <span>{{ c.insumoNombre }}</span>
+                  <span class="font-semibold">{{ c.cantidadTeorica }} {{ c.unidadMedidaNombre }}</span>
+                </li>
+              }
+            </ul>
+            <p class="text-[11px] text-emerald-700 mt-2">
+              Los componentes se cargan automáticamente desde la fórmula técnica y se escalan a la cantidad solicitada.
+            </p>
+          }
+        </div>
+      }
+
+      <div>
+        <label class="text-xs font-semibold text-gray-500 mb-1 block">Cantidad solicitada</label>
+        <input
+          type="number"
+          step="0.0001"
+          min="0.0001"
+          [value]="cantidadCotizar()"
+          (input)="setCantidadCotizar($event)"
+          class="w-full border border-gray-300 rounded-md px-3 py-2 text-sm" />
+        <p class="text-xs text-gray-400 mt-1">La cantidad de la prescripción es {{ detalle.cantidadSolicitada }} {{ detalle.unidadMedidaNombre }}.</p>
+      </div>
+      <p class="text-xs text-gray-500">
+        El precio sugerido se calcula con los componentes de la fórmula técnica asociada y la vigencia es de 15 días.
+      </p>
+
+      <div class="flex items-center justify-between bg-indigo-50 border border-indigo-100 rounded-lg px-4 py-3">
+        <div>
+          <p class="text-xs font-semibold text-indigo-700 uppercase tracking-wide">Total sugerido</p>
+          <p class="text-[11px] text-indigo-500">Redondeado al siguiente múltiplo de S/ 0.50</p>
+        </div>
+        @if (cargandoPreview()) {
+          <span class="text-sm text-indigo-500">Calculando...</span>
+        } @else if (precioPreview() !== null) {
+          <span class="text-2xl font-bold text-indigo-900">S/ {{ precioPreview() | number:'1.2-2' }}</span>
+        } @else {
+          <span class="text-sm text-indigo-400">—</span>
+        }
+      </div>
+    </div>
+  }
+  <div class="flex justify-end gap-2 pt-5 mt-4 border-t border-gray-200">
+    <p-button label="Cancelar" styleClass="p-button-text p-button-secondary" (onClick)="cerrarCotizarDialog()" [disabled]="cotizando()"></p-button>
+    <p-button label="Generar" icon="pi pi-check" (onClick)="confirmarCotizacion()" [loading]="cotizando()" [disabled]="cargandoPreview() || precioPreview() === null"></p-button>
+  </div>
+</p-dialog>
+
+<app-confirm-dialog
+  [(visible)]="showValidarDialog"
+  title="Confirmar Validación"
+  message="¿Está seguro que desea validar esta receta? Este proceso confirma que la receta cumple con los requisitos técnicos para ser elaborada."
+  confirmLabel="Validar"
+  (onConfirm)="validar()">
+</app-confirm-dialog>

@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+﻿import { Component, signal, ChangeDetectionStrategy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -20,6 +20,7 @@ import { ApiError } from '../../../core/models/api-error.model';
   ],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
+  changeDetection: ChangeDetectionStrategy.OnPush
 })
 export class LoginComponent {
 
@@ -60,8 +61,8 @@ export class LoginComponent {
         this.loading.set(false);
         this.errorMessage.set(
           err.status === 401
-            ? 'Usuario o contraseña incorrectos.'
-            : (err.message ?? 'Error al iniciar sesión.')
+            ? 'Usuario o contraseÃ±a incorrectos.'
+            : (err.message ?? 'Error al iniciar sesiÃ³n.')
         );
       },
     });

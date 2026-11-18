@@ -1,0 +1,104 @@
+<div class="page-container">
+  
+  <app-page-header title="Médicos" subtitle="Directorio de prescriptores y especialistas">
+    @if (canEdit()) {
+      <p-button 
+        label="Nuevo Médico" 
+        icon="pi pi-plus" 
+        routerLink="/medicos/nuevo"
+      ></p-button>
+    }
+  </app-page-header>
+
+  <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+    <!-- Buscador Cliente -->
+    <div class="flex items-center gap-3 mb-6 max-w-md">
+      <div class="relative w-full">
+        <i class="pi pi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"></i>
+        <input 
+          pInputText 
+          [ngModel]="busquedaCmp()"
+          (ngModelChange)="busquedaCmp.set($event)"
+          placeholder="Filtrar por CMP..." 
+          class="w-full pl-10"
+        />
+      </div>
+    </div>
+
+    <!-- Tabla nativa -->
+    @if (loading()) {
+      <div class="py-12">
+        <app-loading-state message="Cargando médicos..." />
+      </div>
+    } @else if (medicosFiltrados().length === 0) {
+      <div class="py-12">
+        <app-empty-state icon="pi pi-users" title="No se encontraron médicos" message="No hay médicos registrados con los filtros actuales."></app-empty-state>
+      </div>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-50 text-left">
+            <tr>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Médico</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Especialidad</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Teléfono</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Estado</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Creado</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Actualizado</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-center w-32">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (m of medicosFiltrados(); track m.id) {
+              <tr class="border-t border-gray-100 hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4">
+                  <div class="font-bold text-gray-700">{{ m.apellidos }}, {{ m.nombres }}</div>
+                  <div class="text-xs text-gray-500 mt-0.5">CMP: {{ m.cmp }}</div>
+                </td>
+                <td class="px-6 py-4">{{ m.especialidad || '-' }}</td>
+                <td class="px-6 py-4">{{ m.telefono || '-' }}</td>
+                <td class="px-6 py-4">
+                  <app-status-badge [status]="m.estado" />
+                </td>
+                <td class="px-6 py-4 text-xs text-gray-500">{{ formatearFecha(m.createdAt) }}</td>
+                <td class="px-6 py-4 text-xs text-gray-500">{{ formatearFecha(m.updatedAt) }}</td>
+                <td class="px-6 py-4 text-center">
+                  <div class="flex items-center justify-center gap-2">
+                    @if (canEdit()) {
+                      <p-button
+                        icon="pi pi-pencil"
+                        class="p-button-sm p-button-text p-button-primary"
+                        [routerLink]="['/medicos/editar', m.id]"
+                        pTooltip="Editar médico"
+                        tooltipPosition="top">
+                      </p-button>
+                      <button
+                        class="p-button-sm p-button-text"
+                        [ngClass]="m.estado === 'ACTIVO' ? 'p-button-danger' : 'p-button-success'"
+                        (click)="confirmarToggle(m)"
+                        pTooltip="{{ m.estado === 'ACTIVO' ? 'Inactivar médico' : 'Activar médico' }}"
+                        tooltipPosition="top">
+                        <i [ngClass]="m.estado === 'ACTIVO' ? 'pi pi-ban' : 'pi pi-check'"></i>
+                      </button>
+                    } @else {
+                      <i class="pi pi-lock text-gray-300"></i>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </div>
+
+  <app-confirm-dialog
+    [visible]="showInactivarDialog()"
+    title="Confirmar cambio de estado"
+    [message]="'¿Está seguro que desea ' + (medicoSeleccionado()?.estado === 'ACTIVO' ? 'inactivar' : 'activar') + ' al médico ' + medicoSeleccionado()?.nombres + ' ' + medicoSeleccionado()?.apellidos + '? ' + (medicoSeleccionado()?.estado === 'ACTIVO' ? 'El médico no podrá ser seleccionado para nuevas recetas. Sus recetas históricas se conservarán.' : 'El médico volverá a estar disponible para nuevas recetas.')"
+    [loading]="loading()"
+    (onConfirm)="ejecutarToggle()"
+    (onCancel)="showInactivarDialog.set(false)">
+  </app-confirm-dialog>
+</div>

@@ -1,0 +1,26 @@
+<header class="header-container">
+  
+  <div class="header-left">
+    <!-- Botón futuro para colapsar sidebar en móviles -->
+    <p-button icon="pi pi-bars" [text]="true" styleClass="p-button-secondary lg:hidden"></p-button>
+  </div>
+
+  <div class="header-right">
+    
+    <div class="user-info" (click)="userMenu.toggle($event)">
+      <div class="user-avatar">
+        <i class="pi pi-user"></i>
+      </div>
+      <div class="user-details">
+        <span class="user-name">{{ authService.currentUser()?.username }}</span>
+        <span class="user-role">{{ authService.currentUser()?.roles?.[0] }}</span>
+      </div>
+      <i class="pi pi-angle-down text-sm text-gray-500"></i>
+    </div>
+
+    <!-- Menú desplegable de PrimeNG -->
+    <p-menu #userMenu [model]="userMenuItems" [popup]="true" appendTo="body"></p-menu>
+
+  </div>
+
+</header>

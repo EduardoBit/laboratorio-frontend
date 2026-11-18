@@ -1,0 +1,90 @@
+<div *ngIf="loading()">
+  <app-loading-state message="Cargando fórmula..." />
+</div>
+
+<div *ngIf="!loading() && !formula()">
+  <app-empty-state title="Fórmula no encontrada" message="No se pudo cargar la información de la fórmula maestra." />
+</div>
+
+<div *ngIf="!loading() && formula()" class="page-container max-w-6xl mx-auto">
+  <app-page-header title="Fórmula Maestra" [subtitle]="formula()!.nombre">
+    <p-button label="Volver" icon="pi pi-arrow-left" styleClass="p-button-text p-button-secondary" routerLink="/formulas"></p-button>
+  </app-page-header>
+
+  <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm mb-6">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+      <div>
+        <h2 class="text-lg font-bold text-gray-800">{{ formula()!.nombre }}</h2>
+        <p class="text-gray-500 text-sm">Ficha farmacotécnica maestra • ID: {{ formula()!.id }}</p>
+      </div>
+      <div class="flex items-center gap-3">
+        <app-status-badge [status]="formula()!.estado" />
+      </div>
+    </div>
+
+    <div class="flex gap-2 overflow-x-auto pb-4 mb-6 border-b border-gray-100">
+      <button *ngFor="let version of formula()!.versiones"
+              [class]="esVersionVigente(version) ? 'px-4 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700 border border-blue-200' : 'px-4 py-2 text-sm font-medium rounded-lg bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'"
+              (click)="seleccionarVersion(version)">
+        <span class="font-bold">{{ esVersionVigente(version) ? '★ ' : '' }}v{{ version.numeroVersion }}</span>
+        <span *ngIf="version.usadaEnPreparacion" class="ml-1 text-[10px] uppercase font-bold text-red-600 bg-red-50 px-1.5 py-0.5 rounded">USADA</span>
+      </button>
+    </div>
+
+    <div *ngIf="versionSeleccionada()" class="mb-6">
+      <h3 class="text-sm font-bold text-gray-500 uppercase mb-3">Versión v{{ versionSeleccionada()!.numeroVersion }}</h3>
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-xs text-gray-500 uppercase">Cantidad base</p>
+          <p class="text-gray-800 font-medium">{{ versionSeleccionada()!.cantidadBase }}</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-xs text-gray-500 uppercase">Estado de versión</p>
+          <p class="text-gray-800 font-medium">{{ versionSeleccionada()!.usadaEnPreparacion ? 'Usada en producción (inmutable)' : 'Disponible' }}</p>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-lg">
+          <p class="text-xs text-gray-500 uppercase">Componentes</p>
+          <p class="text-gray-800 font-medium">{{ componentesVersion().length }}</p>
+        </div>
+      </div>
+
+      <div *ngIf="versionSeleccionada()!.usadaEnPreparacion" class="bg-amber-50 border border-amber-200 p-4 rounded-lg mb-4">
+        <div class="flex items-start gap-3">
+          <i class="pi pi-lock mt-1 text-amber-600"></i>
+          <div>
+            <p class="text-sm font-semibold text-amber-800">RN-FOR-001: Versión inmutable</p>
+            <p class="text-sm text-amber-700">Esta versión ya fue utilizada en órdenes de preparación reales. Para ajustar cantidades o insumos, cree una nueva versión.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm border border-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">#</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Insumo</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Cantidad</th>
+              <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Unidad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of componentesVersion(); let i = index" class="border-t border-gray-100">
+              <td class="px-6 py-4 text-gray-500">{{ i + 1 }}</td>
+              <td class="px-6 py-4 font-medium text-gray-700">{{ c.insumoNombre }}</td>
+              <td class="px-6 py-4 text-gray-700">{{ c.cantidad }}</td>
+              <td class="px-6 py-4 text-gray-700">{{ c.unidadMedidaNombre }}</td>
+            </tr>
+            <tr *ngIf="componentesVersion().length === 0">
+              <td colspan="4" class="px-6 py-8 text-center text-gray-500">Sin componentes registrados.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div *ngIf="versionSeleccionada() && !versionSeleccionada()!.usadaEnPreparacion" class="mt-6 flex gap-3">
+        <p-button label="Crear Nueva Versión" icon="pi pi-copy" styleClass="p-button-primary p-button-sm" (onClick)="crearNuevaVersion()"></p-button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,96 @@
+<div class="page-container">
+  <app-page-header title="Fórmulas Maestras" subtitle="Catálogo de preparados magistrales estandarizados">
+    <p-button label="Nueva Fórmula" icon="pi pi-plus" [routerLink]="['/formulas/nuevo']"></p-button>
+  </app-page-header>
+
+  <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm mb-6">
+    <h2 class="text-sm font-bold text-gray-600 mb-4 uppercase tracking-wider">Filtros</h2>
+    <form [formGroup]="filterForm" class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+      <div class="flex-1 flex flex-col gap-1 md:col-span-2">
+        <label class="text-xs font-semibold text-gray-500">Nombre</label>
+        <input pInputText formControlName="nombre" placeholder="Nombre de fórmula" class="w-full" />
+      </div>
+      <div class="flex-1 flex flex-col gap-1">
+        <label class="text-xs font-semibold text-gray-500">Estado</label>
+        <select formControlName="estado" class="w-full p-inputtext bg-white border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+          <option value="">Todas</option>
+          @for (est of estadoOptions; track est.value) {
+            <option [value]="est.value">{{ est.label }}</option>
+          }
+        </select>
+      </div>
+      <div class="flex-1 flex flex-col gap-1 md:col-span-4">
+        <div class="flex gap-3">
+          <p-button type="button" label="Limpiar" icon="pi pi-times" styleClass="p-button-text p-button-secondary" (onClick)="limpiarFiltros()"></p-button>
+        </div>
+      </div>
+    </form>
+  </div>
+
+  @if (loading()) {
+    <app-loading-state message="Cargando fórmulas..." />
+  } @else if (formulas().length === 0) {
+    <app-empty-state title="No se encontraron fórmulas" message="Intente ajustar los filtros de búsqueda o registre una fórmula maestra nueva.">
+      <p-button label="Nueva Fórmula" icon="pi pi-plus" [routerLink]="['/formulas/nuevo']"></p-button>
+    </app-empty-state>
+  } @else {
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm border border-gray-200">
+        <thead class="bg-gray-50">
+          <tr>
+            <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Nombre</th>
+            <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Versión Vigente</th>
+            <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Base Patrón</th>
+            <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Nº Componentes</th>
+            <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase">Estado</th>
+            <th class="px-6 py-3 text-xs font-bold text-gray-500 uppercase text-center">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (formula of formulas(); track formula.id) {
+          <tr class="border-t border-gray-100 hover:bg-gray-50">
+            <td class="px-6 py-4 font-medium text-gray-700">{{ formula.nombre }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ versionVigente(formula) }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ basePatron(formula) }}</td>
+            <td class="px-6 py-4 text-gray-700">{{ numComponentes(formula) }}</td>
+            <td class="px-6 py-4"><app-status-badge [status]="formula.estado" /></td>
+            <td class="px-6 py-4 text-center">
+              <div class="flex items-center justify-center gap-2">
+                <p-button
+                  icon="pi pi-eye"
+                  [text]="true"
+                  styleClass="p-button-sm p-button-info"
+                  (onClick)="verDetalle(formula.id)"
+                  pTooltip="Ver detalle"
+                  tooltipPosition="top">
+                </p-button>
+                <button
+                  class="p-button-sm p-button-text"
+                  [ngClass]="formula.estado === 'ACTIVA' ? 'p-button-danger' : 'p-button-success'"
+                  (click)="confirmarCambioEstado(formula.id, formula.estado)"
+                  [pTooltip]="formula.estado === 'ACTIVA' ? 'Inactivar fórmula' : 'Activar fórmula'"
+                  tooltipPosition="top">
+                  <i [ngClass]="formula.estado === 'ACTIVA' ? 'pi pi-ban' : 'pi pi-check'"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <p-paginator [rows]="size()" [totalRecords]="totalElements()" [first]="first()" [rowsPerPageOptions]="[5, 10, 20, 50]" [showCurrentPageReport]="true" currentPageReportTemplate="Mostrando {first} a {last} de {totalRecords}" (onPageChange)="onPageChange($event)"></p-paginator>
+  }
+
+  <app-confirm-dialog
+    [visible]="confirmVisible()"
+    (visibleChange)="confirmVisible.set($event)"
+    title="Cambiar estado de fórmula"
+    [message]="'¿Está seguro de cambiar el estado a ' + (confirmEstado() === 'ACTIVO' ? 'ACTIVO' : 'INACTIVO') + '?'"
+    [confirmLabel]="'Cambiar'"
+    [cancelLabel]="'Cancelar'"
+    (onConfirm)="ejecutarCambioEstado()"
+    (onCancel)="cancelarConfirm()"
+  />
+</div>

@@ -1,0 +1,14 @@
+<div class="layout-wrapper">
+  <!-- Sidebar dinámico (Paso 2) -->
+  <app-sidebar class="layout-sidebar"></app-sidebar>
+
+  <div class="layout-main-container">
+    <!-- Header (Paso 3) -->
+    <app-header class="layout-header"></app-header>
+
+    <!-- Contenido de la Feature actual -->
+    <main class="layout-main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

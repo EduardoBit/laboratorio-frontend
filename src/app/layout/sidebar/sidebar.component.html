@@ -1,0 +1,36 @@
+<aside class="sidebar-container">
+  
+  <!-- Logo y Título -->
+  <div class="sidebar-logo-section">
+    <i class="pi pi-flask sidebar-logo-icon"></i>
+    <span class="sidebar-logo-text">Lab Fórmulas</span>
+  </div>
+
+  <!-- Menú de navegación iterado desde el Signal -->
+  <nav class="sidebar-nav">
+    @for (group of visibleGroups(); track group.label) {
+      <div class="sidebar-group">
+        
+        <!-- Nombre del grupo -->
+        <h3 class="sidebar-group-title">{{ group.label }}</h3>
+        
+        <!-- Elementos del grupo -->
+        <ul class="sidebar-menu">
+          @for (item of group.items; track item.route) {
+            <li>
+              <a 
+                [routerLink]="item.route" 
+                routerLinkActive="active" 
+                class="sidebar-menu-item">
+                <i [ngClass]="['pi', item.icon, 'sidebar-menu-icon']"></i>
+                <span>{{ item.label }}</span>
+              </a>
+            </li>
+          }
+        </ul>
+
+      </div>
+    }
+  </nav>
+
+</aside>

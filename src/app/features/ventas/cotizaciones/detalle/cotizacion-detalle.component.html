@@ -1,0 +1,105 @@
+@if (loading()) {
+  <app-loading-state message="Cargando cotización..." />
+} @else if (!cotizacion()) {
+  <app-empty-state title="Cotización no encontrada" message="No se pudo cargar la información de la cotización." />
+} @else {
+  <div class="page-container max-w-6xl mx-auto">
+    <app-page-header title="Cotización #{{ cotizacion()!.id }}" [subtitle]="'Emitida: ' + (cotizacion()!.fechaEmision | date:'dd/MM/yyyy HH:mm')">
+      <p-button label="Volver" icon="pi pi-arrow-left" styleClass="p-button-text p-button-secondary" routerLink="/cotizaciones"></p-button>
+      @if (puedeFormalizar()) {
+        <p-button label="Formalizar pedido" icon="pi pi-shopping-cart" (onClick)="abrirFormalizar()"></p-button>
+      }
+      @if (cotizacion()!.pedidoId) {
+        <p-button label="Ver pedido" icon="pi pi-external-link" styleClass="p-button-outlined" (onClick)="irAPedido()"></p-button>
+      }
+    </app-page-header>
+
+    @if (errorMsg()) {
+      <div class="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">{{ errorMsg() }}</div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+      <div class="lg:col-span-2 bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <h3 class="text-sm font-bold text-gray-500 uppercase mb-4">Receta y paciente</h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+          <div><span class="text-gray-500">Paciente:</span> <span class="font-medium">{{ cotizacion()!.receta.pacienteNombre }}</span></div>
+          <div><span class="text-gray-500">DNI:</span> <span class="font-medium">{{ cotizacion()!.receta.pacienteDni }}</span></div>
+          <div>
+            <span class="text-gray-500">Médico:</span>
+            <span class="font-medium ml-1">{{ cotizacion()!.receta.medicoNombre }}</span>
+            <span class="text-gray-500 ml-1">(CMP: {{ cotizacion()!.receta.medicoCmp }})</span>
+          </div>
+          <div><span class="text-gray-500">Receta:</span> <span class="font-medium">#{{ cotizacion()!.receta.recetaId }}</span></div>
+          <div><span class="text-gray-500">Libro recetario:</span> <span class="font-medium">{{ cotizacion()!.receta.libroNumero || '-' }}</span></div>
+          <div class="md:col-span-2"><span class="text-gray-500">Prescripción:</span> <span class="font-medium">{{ cotizacion()!.receta.descripcionPrescrita }}</span></div>
+          <div><span class="text-gray-500">Cantidad solicitada:</span> <span class="font-medium">{{ cotizacion()!.receta.cantidadSolicitada }} {{ cotizacion()!.receta.unidadMedida }}</span></div>
+        </div>
+      </div>
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <h3 class="text-sm font-bold text-gray-500 uppercase mb-4">Estado comercial</h3>
+        <div class="space-y-3 text-sm">
+          <div class="flex items-center justify-between"><span class="text-gray-500">Estado</span><app-status-badge [status]="cotizacion()!.estado" /></div>
+          <div class="flex items-center justify-between"><span class="text-gray-500">Vigencia</span><span [class]="cotizacion()!.esVigente ? 'text-emerald-700 font-semibold' : 'text-red-700 font-semibold'">{{ cotizacion()!.esVigente ? 'Vigente' : 'No vigente' }}</span></div>
+          <div><span class="text-gray-500">Vence:</span> <span class="font-medium">{{ cotizacion()!.fechaVencimiento | date:'dd/MM/yyyy HH:mm' }}</span></div>
+          <div class="pt-2 border-t"><span class="text-gray-500">Precio sugerido (congelado)</span><div class="text-2xl font-bold text-gray-900">S/ {{ cotizacion()!.precioSugerido | number:'1.2-2' }}</div></div>
+        </div>
+      </div>
+    </div>
+
+    @if (cotizacion()!.formula) {
+      <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm mb-6">
+        <h3 class="text-sm font-bold text-gray-500 uppercase mb-2">Fórmula técnica</h3>
+        <p class="text-gray-800 font-medium mb-4">{{ cotizacion()!.formula!.formulaNombre }} <span class="text-gray-500 text-sm">({{ cotizacion()!.formula!.tipo }} · v{{ cotizacion()!.formula!.numeroVersion }})</span></p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm border border-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-2 text-xs font-bold text-gray-500 uppercase text-left">Insumo</th>
+                <th class="px-4 py-2 text-xs font-bold text-gray-500 uppercase text-right">Cantidad</th>
+                <th class="px-4 py-2 text-xs font-bold text-gray-500 uppercase text-left">Unidad</th>
+                <th class="px-4 py-2 text-xs font-bold text-gray-500 uppercase text-right">Costo unit.</th>
+                <th class="px-4 py-2 text-xs font-bold text-gray-500 uppercase text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (c of cotizacion()!.formula!.componentes; track c.insumoId) {
+                <tr class="border-t border-gray-100">
+                  <td class="px-4 py-2">{{ c.insumoNombre }}</td>
+                  <td class="px-4 py-2 text-right">{{ c.cantidad | number:'1.2-4' }}</td>
+                  <td class="px-4 py-2">{{ c.unidad }}</td>
+                  <td class="px-4 py-2 text-right">S/ {{ c.costoUnitario | number:'1.2-4' }}</td>
+                  <td class="px-4 py-2 text-right">S/ {{ c.subtotal | number:'1.2-2' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <p class="text-xs text-gray-500 mt-3">El desglose es referencial y puede variar respecto al contexto de emisión; el precio sugerido es el valor comercial congelado.</p>
+      </div>
+    }
+
+    <div class="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+      <h3 class="text-sm font-bold text-gray-500 uppercase mb-4">Desglose de costos</h3>
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm max-w-2xl">
+        <div class="flex justify-between"><span class="text-gray-500">Subtotal insumos</span><span>S/ {{ cotizacion()!.desgloseCostos.subtotalInsumos | number:'1.2-2' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Mano de obra</span><span>S/ {{ cotizacion()!.desgloseCostos.manoDeObra | number:'1.2-2' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Acondicionamiento</span><span>S/ {{ cotizacion()!.desgloseCostos.acondicionamiento | number:'1.2-2' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Costo base</span><span>S/ {{ cotizacion()!.desgloseCostos.costoBase | number:'1.2-2' }}</span></div>
+        <div class="flex justify-between"><span class="text-gray-500">Margen ({{ cotizacion()!.desgloseCostos.margenPorcentaje | number:'1.2-2' }}%)</span><span>S/ {{ cotizacion()!.desgloseCostos.margenMonto | number:'1.2-2' }}</span></div>
+        <div class="flex justify-between font-bold border-t pt-2"><span>Total</span><span>S/ {{ cotizacion()!.precioSugerido | number:'1.2-2' }}</span></div>
+      </div>
+    </div>
+
+    <app-confirm-dialog
+      [visible]="showFormalizar()"
+      (visibleChange)="showFormalizar.set($event)"
+      title="Formalizar pedido"
+      [message]="'¿Formalizar esta cotización y generar un pedido? Paciente: ' + (cotizacion()!.receta.pacienteNombre || '-') + ' · Total: S/ ' + (cotizacion()!.precioSugerido | number:'1.2-2')"
+      confirmLabel="Formalizar"
+      cancelLabel="Cancelar"
+      [loading]="procesando()"
+      (onConfirm)="confirmarFormalizar()"
+      (onCancel)="cancelarFormalizar()"
+    />
+  </div>
+}

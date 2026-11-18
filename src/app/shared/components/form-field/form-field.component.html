@@ -1,0 +1,27 @@
+﻿<div class="flex flex-col gap-1 mb-4">
+  @if (forId()) {
+    <label [for]="forId()" class="text-xs font-semibold text-gray-700">
+      {{ label() }}
+      @if (required()) {
+        <span class="text-red-500">*</span>
+      }
+    </label>
+  } @else {
+    <label class="text-xs font-semibold text-gray-700">
+      {{ label() }}
+      @if (required()) {
+        <span class="text-red-500">*</span>
+      }
+    </label>
+  }
+  
+  <div class="w-full">
+    <ng-content></ng-content>
+  </div>
+  
+  @if (error()) {
+    <span class="text-xs text-red-500 font-semibold mt-0.5">{{ error() }}</span>
+  } @else if (hint()) {
+    <span class="text-xs text-gray-400 mt-0.5">{{ hint() }}</span>
+  }
+</div>
